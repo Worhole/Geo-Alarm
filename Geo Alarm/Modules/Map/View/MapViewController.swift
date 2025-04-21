@@ -9,12 +9,10 @@ import UIKit
 import MapKit
 import CoreLocation
 
-
 class MapViewController: UIViewController {
     
     var mapView = MKMapView()
-    
-    let locationManager = CLLocationManager()
+    var presenter:MapViewPresenterProtocol!
     
     let locationPermissionVC = LocationPermissionViewController()
     
@@ -34,116 +32,38 @@ class MapViewController: UIViewController {
     }
     
 }
-//MARK: - CLLocationManagerDelegate
-extension MapViewController:CLLocationManagerDelegate{
+//MARK: - MapViewProtocol
+extension MapViewController:MapViewProtocol{
     
-    func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
-        print("пришли в \(region.identifier)")
-        NotificationCenter.default.post(name: NSNotification.Name("locationEnter"), object: nil)
-    }
-    func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: any Error) {
-        print("ошибка \(error.localizedDescription)")
+    func dismissPermissionScreen() {
+        locationPermissionVC.dismiss(animated: true)
     }
     
-    func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, for region: CLRegion) {
-        switch state {
-        case .inside:
-            print("внутри")
-            NotificationCenter.default.post(name: NSNotification.Name("locationInside"), object: nil)
-        case .outside:
-            print("снаружи бро")
-        case .unknown :
-            print("хз")
-        }
-    }
-}
-//MARK: - checkAuthStatus
-extension MapViewController {
-    @objc
-    func checkAuthStatus(){
-        locationManager.requestAlwaysAuthorization()
-        if locationManager.authorizationStatus != .authorizedAlways {
-            locationPermissionVC.modalPresentationStyle = .overFullScreen
-            present(locationPermissionVC, animated: true)
-        }else {
-            locationPermissionVC.dismissPermissionVC()
-            mapView.showsUserLocation = true
-            mapView.showsUserTrackingButton = true
-            locationManager.desiredAccuracy = kCLLocationAccuracyBest
-            locationManager.startUpdatingLocation()
-        }
-    }
-}
-//MARK: - Установка мониторинга
-extension MapViewController{
-    func setMonitoringRegion(coordinate:CLLocationCoordinate2D) {
-        let region = CLCircularRegion(center: coordinate, radius: 50, identifier: "id")
-        region.notifyOnEntry = true
-        locationManager.delegate = self
-        locationManager.startMonitoring(for: region)
-        print("мониторинг запущен")
-    }
-    func checkState(coordinate:CLLocationCoordinate2D){
-        let region = CLCircularRegion(center: coordinate, radius: 50, identifier: "id")
-        region.notifyOnEntry = true
-        locationManager.delegate = self
-        locationManager.startMonitoring(for: region)
-        locationManager.requestState(for: region)
-    }
-}
-// MARK: -- обработка локации long press
-extension MapViewController {
-    func setupLongPress(){
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction))
-        longPress.minimumPressDuration = 0.3
-        mapView.addGestureRecognizer(longPress)
-    }
-    @objc
-    func longPressAction(_ gestureRecognizer: UILongPressGestureRecognizer){
-       
-        guard gestureRecognizer.state == .began else {return}
-        removeAnnotations()
-        
-        let generator = UISelectionFeedbackGenerator()
-        generator.selectionChanged()
-        
-        let locationPoint = gestureRecognizer.location(in: mapView)
-        let locationCoordinate = mapView.convert(locationPoint, toCoordinateFrom: mapView)
-        addAnnotation(locationCoordinate)
-        
-        checkState(coordinate: locationCoordinate)
-        
-        configureSheet(latitude: String(format: "%6f",locationCoordinate.latitude), longitude: String(format: "%6f",locationCoordinate.longitude))
+    func showPermissionScreen() {
+        locationPermissionVC.modalPresentationStyle = .overFullScreen
+        present(locationPermissionVC, animated: true)
     }
     
-    @objc
-    func removeAnnotations(){
-        let annotations = mapView.annotations.filter{ !($0 is MKUserLocation) }
-        NotificationCenter.default.post(name: NSNotification.Name("dismissBottomSheet"), object: nil)
-        mapView.removeAnnotations(annotations)
+    func setupUserLocation() {
+        mapView.showsUserTrackingButton = true
+        mapView.showsUserLocation = true
     }
     
-    @objc
-    func removeOverlays(){
-        mapView.removeOverlays(mapView.overlays)
-    }
-    
-    private func addAnnotation(_ coordinate:CLLocationCoordinate2D){
-        removeOverlays()
-        
+    func addAnnotation(at coordinate: CLLocationCoordinate2D) {
         let circleOverlay = MKCircle(center: coordinate, radius: 50)
         mapView.addOverlay(circleOverlay)
-        
         let annotation = MKPointAnnotation()
         annotation.coordinate = coordinate
         mapView.addAnnotation(annotation)
+        
     }
-}
-
-// MARK: -- появление bottomSheet, добавление мониторинга  локации
-extension MapViewController {
-    func configureSheet(latitude:String,longitude:String){
-        let bottomvc = AddMonitoringLocationViewController(latitude: latitude, longitude: longitude)
+    func showBottomSheet(coordinate: CLLocationCoordinate2D) {
+        
+        let bottomvc = AddMonitoringLocationViewController()
+        let locationService = LocationService()
+        let presenter = AddMonitoringLocationPresenter(view: bottomvc, locationService:locationService , coordinate: coordinate)
+        bottomvc.presenter = presenter
+        
         let nav = UINavigationController(rootViewController: bottomvc)
         nav.isModalInPresentation = true
         let defaultDetent = UISheetPresentationController.Detent.custom { context in
@@ -161,13 +81,49 @@ extension MapViewController {
     }
 }
 
+extension MapViewController {
+    @objc
+    func checkAuthStatus(){
+        presenter.checkAuthStatus()
+    }
+}
 
+extension MapViewController {
+    func setupLongPress(){
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction))
+        longPress.minimumPressDuration = 0.3
+        mapView.addGestureRecognizer(longPress)
+    }
+    @objc
+    func longPressAction(_ gestureRecognizer: UILongPressGestureRecognizer){
+        guard gestureRecognizer.state == .began else {return}
+        removeAnnotations()
+        removeOverlays()
+        let generator = UISelectionFeedbackGenerator()
+        generator.selectionChanged()
+        let locationPoint = gestureRecognizer.location(in: mapView)
+        let locationCoordinate = mapView.convert(locationPoint, toCoordinateFrom: mapView)
+        presenter.didLongPress(at: locationCoordinate)
+    }
+    @objc
+    func removeAnnotations(){
+        let annotations = mapView.annotations.filter{ !($0 is MKUserLocation) }
+        NotificationCenter.default.post(name: NSNotification.Name("dismissBottomSheet"), object: nil)
+        mapView.removeAnnotations(annotations)
+    }
+    @objc
+    func removeOverlays(){
+        mapView.removeOverlays(mapView.overlays)
+    }
+}
 
 extension MapViewController:MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: any MKOverlay) -> MKOverlayRenderer {
         if overlay is MKCircle{
-            return PulsingCircle(overlay: overlay)
+            return ZoneCircle(overlay: overlay)
         }
         return MKOverlayRenderer(overlay: overlay)
     }
 }
+
+

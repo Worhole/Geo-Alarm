@@ -75,7 +75,7 @@ extension AppDelegate{
         let content = UNMutableNotificationContent()
         content.title = "Geo Alarm"
         content.body = "ты пришел в зону красава че"
-        content.sound = .default
+        content.sound = UNNotificationSound(named: UNNotificationSoundName("ALARM!!!.wav"))
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
         
