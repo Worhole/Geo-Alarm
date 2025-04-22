@@ -33,4 +33,9 @@ class ZoneCircle: MKOverlayPathRenderer {
         ))
         self.path = path.cgPath
     }
+    
+    func contains(_ mapPoint: MKMapPoint) -> Bool {
+        let pointInRenderer = self.point(for: mapPoint)
+        return path.contains(pointInRenderer)
+    }
 }

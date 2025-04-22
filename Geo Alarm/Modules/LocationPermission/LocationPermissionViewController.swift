@@ -98,7 +98,4 @@ extension LocationPermissionViewController {
            
         }
     }
-//    func dismissPermissionVC(){
-//        self.dismiss(animated: true)
-//    }
 }

@@ -13,12 +13,15 @@ protocol MapViewProtocol:AnyObject {
     func dismissPermissionScreen()
     func setupUserLocation()
     func addAnnotation(at coordinate: CLLocationCoordinate2D)
-    func showBottomSheet(coordinate: CLLocationCoordinate2D)
+    func showStartMonitoringSheet(coordinate: CLLocationCoordinate2D)
+    func showStoptMonitoringSheet(coordinate:CLLocationCoordinate2D)
 }
 
 protocol MapViewPresenterProtocol:AnyObject {
     init(view: MapViewProtocol, locationService:LocationServiceProtocol)
     func didLongPress(at coordinate: CLLocationCoordinate2D)
+    func didPressOnZone(at coordinate:CLLocationCoordinate2D)
+    func stopMonitoring()
     func checkAuthStatus()
 }
 
@@ -34,11 +37,14 @@ class MapPresenter:MapViewPresenterProtocol {
     }
     
     func didLongPress(at coordinate: CLLocationCoordinate2D) {
-        locationService.stopMonitoring()
-        locationService.startMonitoring(coordinate: coordinate)
-        locationService.checkState(coordinate: coordinate)
         view?.addAnnotation(at: coordinate)
-        view?.showBottomSheet(coordinate: coordinate)
+        view?.showStartMonitoringSheet(coordinate: coordinate)
+    }
+    func stopMonitoring() {
+        locationService.stopMonitoring()
+    }
+    func didPressOnZone(at coordinate: CLLocationCoordinate2D) {
+        view?.showStoptMonitoringSheet(coordinate: coordinate)
     }
     
     func checkAuthStatus() {
@@ -55,7 +61,6 @@ class MapPresenter:MapViewPresenterProtocol {
 extension MapPresenter:LocationServiceDelegate {
     func didEnterRegion(_ region: CLRegion) {
         NotificationCenter.default.post(name: NSNotification.Name("locationEnter"), object: nil)
-        print(region)
     }
     func didDetermineState(_ state: CLRegionState, for region: CLRegion) {
         switch state {

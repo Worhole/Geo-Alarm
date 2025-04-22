@@ -21,7 +21,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 
             }
         }
-        NotificationCenter.default.addObserver(self, selector: #selector(sendNotification), name: NSNotification.Name("locationInside"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(sendEnterNotification), name:  NSNotification.Name("locationEnter"), object: nil)
         notificationCenter.delegate = self
         return true
@@ -55,30 +54,12 @@ extension AppDelegate:UNUserNotificationCenterDelegate{
 
 extension AppDelegate{
     @objc
-    func sendNotification(){
-        
-        let content = UNMutableNotificationContent()
-        content.title = "Geo Alarm"
-        content.body = "ты внутри зоны, поздравляю ЛОХ"
-        content.sound = .default
-        
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
-        
-        let request = UNNotificationRequest(identifier: "id", content: content, trigger: trigger)
-        notificationCenter.add(request){ error in
-            print("error notificationCenter request:  \(String(describing: error?.localizedDescription)) ")
-        }
-    }
-    @objc
     func sendEnterNotification(){
-        
         let content = UNMutableNotificationContent()
         content.title = "Geo Alarm"
-        content.body = "ты пришел в зону красава че"
+        content.body = "you are inside the zone"
         content.sound = UNNotificationSound(named: UNNotificationSoundName("ALARM!!!.wav"))
-        
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
-        
         let request = UNNotificationRequest(identifier: "zone", content: content, trigger: trigger)
         notificationCenter.add(request){ error in
             print("error notificationCenter request:  \(String(describing: error?.localizedDescription)) ")

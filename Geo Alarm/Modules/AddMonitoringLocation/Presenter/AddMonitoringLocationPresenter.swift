@@ -10,13 +10,11 @@ import MapKit
 
 protocol AddMonitoringLocationViewProtocol:AnyObject{
     func present(lat: String, lon:String)
-    func dismissView()
 }
 
 protocol AddMonitoringLocationPresenterProtocol:AnyObject{
     init(view:AddMonitoringLocationViewProtocol, locationService:LocationServiceProtocol,coordinate:CLLocationCoordinate2D)
-    func addMonitoring()
-    func removeMonitoring()
+    func startMonitoring()
 }
 
 class AddMonitoringLocationPresenter:AddMonitoringLocationPresenterProtocol{
@@ -32,14 +30,10 @@ class AddMonitoringLocationPresenter:AddMonitoringLocationPresenterProtocol{
         view.present(lat: String(format: "%6f", coordinate.latitude), lon: String(format: "%6f", coordinate.longitude))
     }
     
-    func addMonitoring() {
+    func startMonitoring() {
         locationService.startMonitoring(coordinate: coordinate)
-        view?.dismissView()
-    }
-    
-    func removeMonitoring() {
-        locationService.stopMonitoring()
+        locationService.checkState(coordinate: coordinate)
         NotificationCenter.default.post(name: NSNotification.Name("removeAnnotation"), object: nil)
     }
-    
+   
 }
