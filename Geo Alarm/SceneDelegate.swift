@@ -18,7 +18,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let locationService = LocationService()
         let presenter = MapPresenter(view: mapVC, locationService: locationService)
         mapVC.presenter = presenter
-        window?.rootViewController = UINavigationController(rootViewController: mapVC)
+        window?.rootViewController =  UINavigationController(rootViewController: mapVC)
         window?.makeKeyAndVisible()
     }
 

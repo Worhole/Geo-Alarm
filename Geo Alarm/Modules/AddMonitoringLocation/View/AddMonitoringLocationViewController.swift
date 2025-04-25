@@ -93,7 +93,6 @@ extension AddMonitoringLocationViewController:AddMonitoringLocationViewProtocol 
 }
 
 private extension AddMonitoringLocationViewController{
-    // MARK: --- tapXmark мб тут подправить
     @objc
     func tapXmark(){
         NotificationCenter.default.post(name: NSNotification.Name("removeAnnotation"), object: nil)

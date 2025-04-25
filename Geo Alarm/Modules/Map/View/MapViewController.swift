@@ -19,7 +19,7 @@ class MapViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.addSubview(mapView)
-        setupNotifications()
+        setupNotificationObserver()
         setupGestures()
         mapView.delegate = self
     }
@@ -103,21 +103,20 @@ extension MapViewController:MapViewProtocol{
 
 
 extension MapViewController {
-    func setupNotifications(){
+    func setupNotificationObserver(){
         NotificationCenter.default.addObserver(self, selector: #selector(checkAuthStatus), name: NSNotification.Name("willEnterForeground"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(removeAnnotations), name: NSNotification.Name("removeAnnotation"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(removeOverlays), name: NSNotification.Name("removeOverlays"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(showAlert), name: NSNotification.Name("locationInside"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didTapedOnNotification), name: NSNotification.Name("clickedOnTheNotification"), object: nil)
     }
 }
+
 extension MapViewController {
     @objc
     func checkAuthStatus(){
         presenter.checkAuthStatus()
     }
-}
-
-extension MapViewController {
     @objc
     func removeAnnotations(){
         let annotations = mapView.annotations.filter{ !($0 is MKUserLocation) }
@@ -128,18 +127,22 @@ extension MapViewController {
     func removeOverlays(){
         mapView.removeOverlays(mapView.overlays)
     }
-}
-
-extension MapViewController {
     @objc
     func showAlert(){
-        let alert = UIAlertController(title: "warning", message: "you are inside the selected location, select another location", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "ok", style: .cancel, handler: { [self] action in
-            self.removeAnnotations()
-            self.removeOverlays()
-            presenter.stopMonitoring()
-        }))
-        present(alert, animated: true)
+        DispatchQueue.main.async {
+            let alert = UIAlertController(title: "you are inside the selected location", message: "select another location", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "ok", style: .cancel, handler: { [self] action in
+                self.removeAnnotations()
+                self.removeOverlays()
+                presenter.stopMonitoring()
+            }))
+            self.present(alert, animated: true)
+        }
+    }
+    @objc
+    func didTapedOnNotification(){
+        removeOverlays()
+        presenter.stopMonitoring()
     }
 }
 

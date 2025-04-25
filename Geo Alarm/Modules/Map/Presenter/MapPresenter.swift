@@ -62,15 +62,4 @@ extension MapPresenter:LocationServiceDelegate {
     func didEnterRegion(_ region: CLRegion) {
         NotificationCenter.default.post(name: NSNotification.Name("locationEnter"), object: nil)
     }
-    func didDetermineState(_ state: CLRegionState, for region: CLRegion) {
-        switch state {
-        case .inside:
-            print("inside")
-            NotificationCenter.default.post(name: NSNotification.Name("locationInside"), object: nil)
-        case .outside:
-            print("outside")
-        case .unknown:
-            print("unknown")
-        }
-    }
 }

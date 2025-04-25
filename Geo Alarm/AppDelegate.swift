@@ -48,7 +48,7 @@ extension AppDelegate:UNUserNotificationCenterDelegate{
         completionHandler([.banner,.sound])
     }
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        print("нажали на уведомление")
+        NotificationCenter.default.post(name: NSNotification.Name("clickedOnTheNotification"), object: nil)
     }
 }
 

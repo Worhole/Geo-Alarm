@@ -5,7 +5,6 @@ import MapKit
 
 protocol LocationServiceDelegate:AnyObject {
     func didEnterRegion(_ region: CLRegion)
-    func didDetermineState(_ state: CLRegionState, for region: CLRegion)
 }
 
 protocol LocationServiceProtocol:AnyObject{
@@ -39,17 +38,19 @@ class LocationService:NSObject, LocationServiceProtocol {
     }
     
     func startMonitoring(coordinate: CLLocationCoordinate2D) {
-        stopMonitoring()
-    
         let region = CLCircularRegion(center: coordinate, radius: 50, identifier: UUID().uuidString)
         region.notifyOnEntry = true
         locationManager.startMonitoring(for: region)
-        
     }
     
     func checkState(coordinate:CLLocationCoordinate2D){
         let region = CLCircularRegion(center: coordinate, radius: 50, identifier: UUID().uuidString)
-        locationManager.requestState(for: region)
+        let currentLocation = locationManager.location
+        guard let distance = currentLocation?.distance(from: CLLocation(latitude: region.center.latitude, longitude:  region.center.longitude)) else {
+            return }
+        if distance <= region.radius {
+            NotificationCenter.default.post(name: NSNotification.Name("locationInside"), object: nil)
+        }
     }
     
     func stopMonitoring() {
@@ -67,11 +68,8 @@ class LocationService:NSObject, LocationServiceProtocol {
 extension LocationService:CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         delegate?.didEnterRegion(region)
+        print("EnterRegion")
     }
-    func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, for region: CLRegion) {
-        delegate?.didDetermineState(state, for: region)
-    }
-   
 }
 
 
