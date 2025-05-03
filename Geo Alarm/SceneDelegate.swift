@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import MapKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -14,11 +15,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
+        
         let mapVC = MapViewController()
+        
         let locationService = LocationService()
         let presenter = MapPresenter(view: mapVC, locationService: locationService)
         mapVC.presenter = presenter
-        window?.rootViewController =  UINavigationController(rootViewController: mapVC)
+    
+        let nav = UINavigationController(rootViewController: mapVC)
+      
+        window?.rootViewController = nav
         window?.makeKeyAndVisible()
     }
 
@@ -53,6 +59,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
         print("sceneDidEnterBackground")
+        saveCircle()
+    }
+    
+    func saveCircle(){
+        guard let mapVC = (window?.rootViewController as? UINavigationController)?.viewControllers.first as? MapViewController  else {return}
+        let overlays = mapVC.mapView.overlays.compactMap { $0 as? MKCircle }
+        let circleInfo = overlays.map {
+            [
+                "lat":$0.coordinate.latitude,
+                "lon":$0.coordinate.longitude,
+                "radius":$0.radius
+            ]
+        }
+        UserDefaults.standard.set(circleInfo, forKey: "circleInfo")
     }
 }
 

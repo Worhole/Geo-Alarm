@@ -40,7 +40,11 @@ class LocationService:NSObject, LocationServiceProtocol {
     func startMonitoring(coordinate: CLLocationCoordinate2D) {
         let region = CLCircularRegion(center: coordinate, radius: 50, identifier: UUID().uuidString)
         region.notifyOnEntry = true
+        locationManager.allowsBackgroundLocationUpdates = true
+        locationManager.pausesLocationUpdatesAutomatically = false
+        locationManager.activityType = .fitness
         locationManager.startMonitoring(for: region)
+
     }
     
     func checkState(coordinate:CLLocationCoordinate2D){
@@ -71,6 +75,3 @@ extension LocationService:CLLocationManagerDelegate {
         print("EnterRegion")
     }
 }
-
-
-

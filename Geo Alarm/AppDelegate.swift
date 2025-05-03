@@ -9,9 +9,8 @@ import UIKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
-    let notificationCenter = UNUserNotificationCenter.current()
     
+    let notificationCenter = UNUserNotificationCenter.current()
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         notificationCenter.requestAuthorization(options: [.alert,.sound,.badge]) { granded, error in
             guard granded else {return}
@@ -23,6 +22,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         NotificationCenter.default.addObserver(self, selector: #selector(sendEnterNotification), name:  NSNotification.Name("locationEnter"), object: nil)
         notificationCenter.delegate = self
+        
         return true
     }
  
@@ -40,7 +40,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
     }
     
-
 }
 
 extension AppDelegate:UNUserNotificationCenterDelegate{

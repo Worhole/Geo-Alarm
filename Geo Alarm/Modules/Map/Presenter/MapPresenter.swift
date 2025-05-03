@@ -51,6 +51,7 @@ class MapPresenter:MapViewPresenterProtocol {
         locationService.requestAlwaysAuthorization()
         if locationService.isAlwaysAuthorization() {
             view?.setupUserLocation()
+            
             view?.dismissPermissionScreen()
         }else {
             view?.showPermissionScreen()

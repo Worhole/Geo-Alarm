@@ -22,11 +22,13 @@ class MapViewController: UIViewController {
         setupNotificationObserver()
         setupGestures()
         mapView.delegate = self
+        restoreCircleIfNeeded()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         mapView.frame = view.bounds
+        
     }
     
 }
@@ -189,7 +191,6 @@ extension MapViewController:UIGestureRecognizerDelegate {
     }
 }
 
-
 extension MapViewController:MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: any MKOverlay) -> MKOverlayRenderer {
         if overlay is MKCircle{
@@ -199,4 +200,15 @@ extension MapViewController:MKMapViewDelegate {
     }
 }
 
-
+extension MapViewController{
+    func restoreCircleIfNeeded(){
+        if let circleInfo = UserDefaults.standard.object(forKey: "circleInfo") as? [[String : CLLocationDegrees]] {
+            for info in circleInfo {
+                let coordinate = CLLocationCoordinate2D(latitude: info["lat"] ?? 0, longitude: info["lon"] ?? 0)
+                let radius = info["radius"] ?? 0
+                let circle = MKCircle(center: coordinate, radius: radius)
+                mapView.addOverlay(circle)
+            }
+        }
+    }
+}
