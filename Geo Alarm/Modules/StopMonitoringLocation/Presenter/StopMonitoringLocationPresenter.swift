@@ -31,5 +31,6 @@ class StopMonitoringLocationPresenter:StopMonitoringLocationPresenterProtocol {
     func stopMonitoring() {
         locationService.stopMonitoring()
         NotificationCenter.default.post(name: NSNotification.Name("removeOverlays"), object: nil)
+        UserDefaults.standard.removeObject(forKey: "circleInfo")
     }
 }

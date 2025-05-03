@@ -61,7 +61,7 @@ extension MapViewController:MapViewProtocol{
     func showStartMonitoringSheet(coordinate: CLLocationCoordinate2D) {
         let bottomvc = AddMonitoringLocationViewController()
         let locationService = LocationService()
-        let presenter = AddMonitoringLocationPresenter(view: bottomvc, locationService:locationService , coordinate: coordinate)
+        let presenter = AddMonitoringLocationPresenter(view: bottomvc, locationService:locationService , coordinate: coordinate, mapView: mapView)
         bottomvc.presenter = presenter
         
         let nav = UINavigationController(rootViewController: bottomvc)
