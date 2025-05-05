@@ -13,7 +13,6 @@ class MapViewController: UIViewController {
     
     var mapView = MKMapView()
     var presenter:MapViewPresenterProtocol!
-    
     let locationPermissionVC = LocationPermissionViewController()
     
     override func viewDidLoad() {
@@ -111,6 +110,8 @@ extension MapViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(removeOverlays), name: NSNotification.Name("removeOverlays"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(showAlert), name: NSNotification.Name("locationInside"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(didTapedOnNotification), name: NSNotification.Name("clickedOnTheNotification"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(removeLongPress), name: NSNotification.Name("removeLongPress"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(addLongPress), name: NSNotification.Name("addLongPress"), object: nil)
     }
 }
 
@@ -150,15 +151,28 @@ extension MapViewController {
 
 extension MapViewController:UIGestureRecognizerDelegate {
     func setupGestures(){
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction))
-        longPress.delegate = self
-        longPress.minimumPressDuration = 0.3
-        mapView.addGestureRecognizer(longPress)
-        
+        addLongPress()
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tapAction))
         tapGesture.delegate = self
         tapGesture.numberOfTapsRequired = 1
         mapView.addGestureRecognizer(tapGesture)
+    }
+    @objc func addLongPress(){
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction))
+        longPress.name = "longPress"
+        longPress.delegate = self
+        longPress.minimumPressDuration = 0.3
+        mapView.addGestureRecognizer(longPress)
+    }
+    @objc
+    func removeLongPress(){
+        mapView.gestureRecognizers.map { gestures in
+            for gesture in gestures{
+                if gesture.name == "longPress"{
+                    mapView.removeGestureRecognizer(gesture)
+                }
+            }
+        }
     }
     @objc
     func longPressAction(_ gestureRecognizer: UILongPressGestureRecognizer){

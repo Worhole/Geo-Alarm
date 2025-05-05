@@ -106,6 +106,7 @@ private extension AddMonitoringLocationViewController{
     @objc
     func addMonitoringLocation(){
         presenter.startMonitoring()
+        NotificationCenter.default.post(name: NSNotification.Name("removeLongPress"), object: nil)
         self.dismiss(animated: true)
     }
 }

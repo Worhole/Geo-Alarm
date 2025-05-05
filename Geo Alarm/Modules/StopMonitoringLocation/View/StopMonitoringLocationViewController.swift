@@ -99,6 +99,7 @@ extension StopMonitoringLocationViewController {
     @objc
     func stopMonitoringLocation(){
         presenter.stopMonitoring()
+        NotificationCenter.default.post(name: NSNotification.Name("addLongPress"), object: nil)
         self.dismiss(animated: true)
     }
 }

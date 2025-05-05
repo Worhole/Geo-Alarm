@@ -48,6 +48,7 @@ extension AppDelegate:UNUserNotificationCenterDelegate{
     }
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         NotificationCenter.default.post(name: NSNotification.Name("clickedOnTheNotification"), object: nil)
+        UserDefaults.standard.removeObject(forKey: "circleInfo")
     }
 }
 
