@@ -19,7 +19,7 @@ class MonitoringLocationDetailsViewController: UIViewController {
     }(UIButton(type: .system))
     
     lazy var addLocationButton:UIButton = {
-        $0.setTitle("Stop Monitoring", for: .normal)
+        $0.setTitle("Cancel Alarm", for: .normal)
         $0.backgroundColor = #colorLiteral(red: 1, green: 0, blue: 0.1757532656, alpha: 1)
         $0.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
         $0.tintColor = .white
@@ -32,7 +32,7 @@ class MonitoringLocationDetailsViewController: UIViewController {
     
     lazy var pointLabel:UILabel = {
         $0.translatesAutoresizingMaskIntoConstraints = false
-        $0.text = "Monitoring Location"
+        $0.text = "Alarm Location"
         $0.font = UIFont.systemFont(ofSize: 25, weight: .semibold)
         return $0
     }(UILabel())

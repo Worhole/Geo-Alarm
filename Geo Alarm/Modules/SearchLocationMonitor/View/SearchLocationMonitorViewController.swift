@@ -19,7 +19,7 @@ class SearchLocationMonitorViewController: UIViewController {
     }(UIButton(type: .system))
     
     lazy var addLocationButton:UIButton = {
-        $0.setTitle("Start Monitoring", for: .normal)
+        $0.setTitle("Wake up here", for: .normal)
         $0.backgroundColor = #colorLiteral(red: 0.09206429869, green: 0.4222652912, blue: 0.9932720065, alpha: 1)
         $0.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
         $0.tintColor = .white
