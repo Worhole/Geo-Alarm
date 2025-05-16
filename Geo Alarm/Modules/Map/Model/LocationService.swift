@@ -72,6 +72,5 @@ class LocationService:NSObject, LocationServiceProtocol {
 extension LocationService:CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         delegate?.didEnterRegion(region)
-        print("EnterRegion")
     }
 }

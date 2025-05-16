@@ -1,15 +1,15 @@
 //
-//  StopMonitoringLocationViewController.swift
+//  AddMonitoringLocationViewController.swift
 //  Geo Alarm
 //
-//  Created by 71m3 on 2025-04-22.
+//  Created by 71m3 on 2025-04-16.
 //
 
 import UIKit
 
-class StopMonitoringLocationViewController: UIViewController {
+class MapSelectionMonitorViewController: UIViewController {
     
-    var presenter:StopMonitoringLocationPresenter!
+    var presenter:MapSelectionMonitorPresenter!
     
     lazy var xmarkButton:UIButton = {
         $0.tintColor = .systemGray3
@@ -19,20 +19,20 @@ class StopMonitoringLocationViewController: UIViewController {
     }(UIButton(type: .system))
     
     lazy var addLocationButton:UIButton = {
-        $0.setTitle("Stop Monitoring", for: .normal)
-        $0.backgroundColor = #colorLiteral(red: 1, green: 0, blue: 0.1757532656, alpha: 1)
+        $0.setTitle("Start Monitoring", for: .normal)
+        $0.backgroundColor = #colorLiteral(red: 0.09206429869, green: 0.4222652912, blue: 0.9932720065, alpha: 1)
         $0.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
         $0.tintColor = .white
         $0.layer.cornerRadius = 15
         $0.translatesAutoresizingMaskIntoConstraints = false
         $0.contentEdgeInsets = UIEdgeInsets(top: 10, left: 16, bottom: 10, right: 16)
-        $0.addTarget(self, action: #selector(stopMonitoringLocation), for: .touchUpInside)
+        $0.addTarget(self, action: #selector(addMonitoringLocation), for: .touchUpInside)
         return $0
     }(UIButton(type: .system))
     
     lazy var pointLabel:UILabel = {
         $0.translatesAutoresizingMaskIntoConstraints = false
-        $0.text = "Monitoring Location"
+        $0.text = "Point on map"
         $0.font = UIFont.systemFont(ofSize: 25, weight: .semibold)
         return $0
     }(UILabel())
@@ -50,20 +50,15 @@ class StopMonitoringLocationViewController: UIViewController {
         $0.translatesAutoresizingMaskIntoConstraints = false
         return $0
     }(UILabel())
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupLayout()
+        NotificationCenter.default.addObserver(self, selector: #selector(dismissSheet), name: NSNotification.Name("dismissBottomSheet"), object: nil)
     }
 }
 
-extension StopMonitoringLocationViewController:StopMonitoringLocationViewProtocol {
-    func present(lat: String, lon: String) {
-        pointCoordinates.text = "\(lat),\(lon)"
-    }
-}
-
-private extension StopMonitoringLocationViewController{
+private extension MapSelectionMonitorViewController{
      func setupLayout(){
         let barButton = UIBarButtonItem(customView: xmarkButton)
         self.navigationItem.rightBarButtonItem = barButton
@@ -91,15 +86,27 @@ private extension StopMonitoringLocationViewController{
     }
 }
 
-extension StopMonitoringLocationViewController {
+extension MapSelectionMonitorViewController:MapSelectionMonitorViewProtocol {
+    func present(lat: String, lon: String) {
+        pointCoordinates.text = "\(lat),\(lon)"
+    }
+}
+
+private extension MapSelectionMonitorViewController{
     @objc
     func tapXmark(){
+        NotificationCenter.default.post(name: NSNotification.Name("removeAnnotation"), object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name("removeOverlays"), object: nil)
         self.dismiss(animated: true)
     }
     @objc
-    func stopMonitoringLocation(){
-        presenter.stopMonitoring()
-        NotificationCenter.default.post(name: NSNotification.Name("addLongPress"), object: nil)
+    func dismissSheet(){
+        self.dismiss(animated: true)
+    }
+    @objc
+    func addMonitoringLocation(){
+        presenter.startMonitoring()
+        NotificationCenter.default.post(name: NSNotification.Name("removeLongPress"), object: nil)
         self.dismiss(animated: true)
     }
 }

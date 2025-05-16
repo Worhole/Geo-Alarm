@@ -15,9 +15,29 @@ class MapViewController: UIViewController {
     var presenter:MapViewPresenterProtocol!
     let locationPermissionVC = LocationPermissionViewController()
     
+    lazy var searchButton:UIButton = {
+        $0.translatesAutoresizingMaskIntoConstraints = false
+        $0.backgroundColor = .black
+        $0.setImage(UIImage(systemName: "location.magnifyingglass"), for: .normal)
+        $0.tintColor = .white
+        $0.layer.cornerRadius = 17
+        $0.addTarget(self, action: #selector(goToSearch), for: .touchUpInside)
+        return $0
+    }(UIButton(type: .system))
+    
+    lazy var showUserLocationButton:UIButton = {
+        $0.translatesAutoresizingMaskIntoConstraints = false
+        $0.backgroundColor = .black
+        $0.setImage(UIImage(systemName: "location.fill"), for: .normal)
+        $0.tintColor = .white
+        $0.layer.cornerRadius = 17
+        $0.addTarget(self, action: #selector(showUserLocation), for: .touchUpInside)
+        return $0
+    }(UIButton(type: .system))
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.addSubview(mapView)
+        setupLayout()
         setupNotificationObserver()
         setupGestures()
         mapView.delegate = self
@@ -27,7 +47,6 @@ class MapViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         mapView.frame = view.bounds
-        
     }
     
 }
@@ -43,27 +62,25 @@ extension MapViewController:MapViewProtocol{
     }
     
     func setupUserLocation() {
-        mapView.showsUserTrackingButton = true
         mapView.showsUserLocation = true
-        mapView.userTrackingMode = .follow
     }
-    
+
     func addAnnotation(at coordinate: CLLocationCoordinate2D) {
         let circleOverlay = MKCircle(center: coordinate, radius: 50)
         mapView.addOverlay(circleOverlay)
         let annotation = MKPointAnnotation()
         annotation.coordinate = coordinate
         mapView.addAnnotation(annotation)
-        
     }
     
-    func showStartMonitoringSheet(coordinate: CLLocationCoordinate2D) {
-        let bottomvc = AddMonitoringLocationViewController()
+    func showMapSelectionMonitor(coordinate: CLLocationCoordinate2D) {
+        let view = MapSelectionMonitorViewController()
         let locationService = LocationService()
-        let presenter = AddMonitoringLocationPresenter(view: bottomvc, locationService:locationService , coordinate: coordinate, mapView: mapView)
-        bottomvc.presenter = presenter
+        let presenter = MapSelectionMonitorPresenter(view: view, locationService: locationService, coordinate: coordinate)
+        view.presenter = presenter
         
-        let nav = UINavigationController(rootViewController: bottomvc)
+        
+        let nav = UINavigationController(rootViewController: view)
         nav.isModalInPresentation = true
         let defaultDetent = UISheetPresentationController.Detent.custom { context in
             0.2 * context.maximumDetentValue
@@ -78,14 +95,15 @@ extension MapViewController:MapViewProtocol{
         }
         navigationController?.present(nav, animated: true)
     }
+    
     func showStoptMonitoringSheet(coordinate: CLLocationCoordinate2D) {
         
-        let bottomvc = StopMonitoringLocationViewController()
+        let view = MonitoringLocationDetailsViewController()
         let locationService = LocationService()
-        let presenter = StopMonitoringLocationPresenter(view: bottomvc, locationService: locationService, coordinate: coordinate)
-        bottomvc.presenter = presenter
+        let presenter = MonitoringLocationDetailsPresenter(view: view, locationService: locationService, coordinate: coordinate)
+        view.presenter = presenter
         
-        let nav = UINavigationController(rootViewController: bottomvc)
+        let nav = UINavigationController(rootViewController: view)
         nav.isModalInPresentation = true
         let defaultDetent = UISheetPresentationController.Detent.custom { context in
             0.2 * context.maximumDetentValue
@@ -102,6 +120,70 @@ extension MapViewController:MapViewProtocol{
     }
 }
 
+extension MapViewController:SearchLocationDelegate {
+    func selectLocation(at coordinate: CLLocationCoordinate2D) {
+        presenter.didSelectLocation(at: coordinate)
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
+        mapView.setRegion(region, animated: true)
+    }
+}
+
+extension MapViewController{
+    private func setupLayout(){
+        
+        view.addSubview(mapView)
+        view.addSubview(searchButton)
+        view.addSubview(showUserLocationButton)
+        
+        NSLayoutConstraint.activate([
+            searchButton.topAnchor.constraint(equalTo: mapView.safeAreaLayoutGuide.topAnchor, constant: 100),
+            searchButton.trailingAnchor.constraint(equalTo: mapView.trailingAnchor, constant: -20),
+            searchButton.widthAnchor.constraint(equalToConstant: 40),
+            searchButton.heightAnchor.constraint(equalToConstant: 40),
+            
+            showUserLocationButton.topAnchor.constraint(equalTo: searchButton.bottomAnchor,constant: 20),
+            showUserLocationButton.trailingAnchor.constraint(equalTo: searchButton.trailingAnchor),
+            showUserLocationButton.widthAnchor.constraint(equalToConstant: 40),   showUserLocationButton.heightAnchor.constraint(equalToConstant: 40)
+        ])
+    }
+    @objc
+    func showUserLocation(){
+        var mode: MKUserTrackingMode
+        switch (mapView.userTrackingMode) {
+        case .none:
+            mode = .follow
+        case .follow:
+            mode = .followWithHeading
+        case .followWithHeading:
+            mode = .none
+        @unknown default:
+            fatalError("Unknown user tracking mode")
+        }
+        mapView.userTrackingMode = mode
+    }
+    @objc
+    func goToSearch(){
+        let view = SearchViewController()
+        let service = SearchLocationService()
+        let presenter = SearchLocationPresenter(view: view,service: service)
+        view.presenter = presenter
+        view.delegate = self
+
+        let nav = UINavigationController(rootViewController: view)
+        let defaultDetent = UISheetPresentationController.Detent.custom { context in
+            0.99 * context.maximumDetentValue
+        }
+        if let sheet = nav.sheetPresentationController {
+            sheet.preferredCornerRadius = 20
+            sheet.detents = [defaultDetent]
+            sheet.largestUndimmedDetentIdentifier = defaultDetent.identifier
+            sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+            sheet.prefersEdgeAttachedInCompactHeight = true
+            sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
+        }
+        navigationController?.present(nav, animated: true)
+    }
+}
 
 extension MapViewController {
     func setupNotificationObserver(){
@@ -112,6 +194,7 @@ extension MapViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(didTapedOnNotification), name: NSNotification.Name("clickedOnTheNotification"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(removeLongPress), name: NSNotification.Name("removeLongPress"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(addLongPress), name: NSNotification.Name("addLongPress"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(saveOverlays), name: NSNotification.Name("saveOverlays") , object: nil)
     }
 }
 
@@ -146,6 +229,11 @@ extension MapViewController {
     func didTapedOnNotification(){
         removeOverlays()
         presenter.stopMonitoring()
+    }
+    @objc
+    func saveOverlays(){
+        let overlays = mapView.overlays.compactMap{ $0 as? MKCircle }
+        presenter.saveOverlays(overlays: overlays)
     }
 }
 
@@ -183,7 +271,8 @@ extension MapViewController:UIGestureRecognizerDelegate {
         generator.selectionChanged()
         let locationPoint = gestureRecognizer.location(in: mapView)
         let locationCoordinate = mapView.convert(locationPoint, toCoordinateFrom: mapView)
-        presenter.didLongPress(at: locationCoordinate)
+        presenter.didSelectLocation(at: locationCoordinate)
+        presenter.displayMonitoringSheet(for: locationCoordinate)
     }
     @objc
     func tapAction(_ gestureRecognizer: UITapGestureRecognizer){
