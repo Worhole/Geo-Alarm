@@ -18,7 +18,7 @@ class MonitoringLocationDetailsViewController: UIViewController {
         return $0
     }(UIButton(type: .system))
     
-    lazy var addLocationButton:UIButton = {
+    lazy var cancelAlarmButton:UIButton = {
         $0.setTitle("Cancel Alarm", for: .normal)
         $0.backgroundColor = #colorLiteral(red: 1, green: 0, blue: 0.1757532656, alpha: 1)
         $0.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
@@ -70,7 +70,7 @@ private extension MonitoringLocationDetailsViewController{
         view.backgroundColor = .white
         view.addSubview(pointLabel)
         view.addSubview(coordLabel)
-        view.addSubview(addLocationButton)
+        view.addSubview(cancelAlarmButton)
         view.addSubview(pointCoordinates)
         
         NSLayoutConstraint.activate([
@@ -81,9 +81,9 @@ private extension MonitoringLocationDetailsViewController{
             coordLabel.topAnchor.constraint(equalTo: pointLabel.bottomAnchor,constant: 10),
             coordLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 20),
             
-            addLocationButton.topAnchor.constraint(equalTo: coordLabel.bottomAnchor,constant: 20),
-            addLocationButton.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 20),
-            addLocationButton.heightAnchor.constraint(equalToConstant: 50),
+            cancelAlarmButton.topAnchor.constraint(equalTo: coordLabel.bottomAnchor,constant: 20),
+            cancelAlarmButton.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 20),
+            cancelAlarmButton.heightAnchor.constraint(equalToConstant: 50),
             
             pointCoordinates.bottomAnchor.constraint(equalTo: coordLabel.bottomAnchor),
             pointCoordinates.leadingAnchor.constraint(equalTo: coordLabel.trailingAnchor,constant: 5),

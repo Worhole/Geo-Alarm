@@ -35,6 +35,17 @@ class MapViewController: UIViewController {
         return $0
     }(UIButton(type: .system))
     
+    lazy var showAlarmLocationButton:UIButton = {
+        $0.translatesAutoresizingMaskIntoConstraints = false
+        $0.backgroundColor = .black
+        $0.setImage(UIImage(systemName: "alarm.fill"), for: .normal)
+        $0.tintColor = .white
+        $0.layer.cornerRadius = 17
+        $0.isHidden = true
+        $0.addTarget(self, action: #selector(showAlarmLocation), for: .touchUpInside)
+        return $0
+    }(UIButton(type: .system))
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupLayout()
@@ -42,6 +53,8 @@ class MapViewController: UIViewController {
         setupGestures()
         mapView.delegate = self
         restoreCircleIfNeeded()
+        mapView.userTrackingMode = .follow
+        restoreButtonVisibilityState()
     }
 
     override func viewDidLayoutSubviews() {
@@ -133,17 +146,24 @@ extension MapViewController{
         
         view.addSubview(mapView)
         view.addSubview(searchButton)
+        view.addSubview(showAlarmLocationButton)
         view.addSubview(showUserLocationButton)
         
         NSLayoutConstraint.activate([
-            searchButton.topAnchor.constraint(equalTo: mapView.safeAreaLayoutGuide.topAnchor, constant: 100),
+            searchButton.topAnchor.constraint(equalTo: mapView.safeAreaLayoutGuide.topAnchor, constant: 140),
             searchButton.trailingAnchor.constraint(equalTo: mapView.trailingAnchor, constant: -20),
             searchButton.widthAnchor.constraint(equalToConstant: 40),
             searchButton.heightAnchor.constraint(equalToConstant: 40),
             
-            showUserLocationButton.topAnchor.constraint(equalTo: searchButton.bottomAnchor,constant: 20),
-            showUserLocationButton.trailingAnchor.constraint(equalTo: searchButton.trailingAnchor),
-            showUserLocationButton.widthAnchor.constraint(equalToConstant: 40),   showUserLocationButton.heightAnchor.constraint(equalToConstant: 40)
+            showAlarmLocationButton.topAnchor.constraint(equalTo: searchButton.topAnchor),
+            showAlarmLocationButton.trailingAnchor.constraint(equalTo: searchButton.trailingAnchor),
+            showAlarmLocationButton.widthAnchor.constraint(equalToConstant: 40),
+            showAlarmLocationButton.heightAnchor.constraint(equalToConstant: 40),
+            
+            showUserLocationButton.topAnchor.constraint(equalTo: showAlarmLocationButton.bottomAnchor,constant: 20),
+            showUserLocationButton.trailingAnchor.constraint(equalTo: showAlarmLocationButton.trailingAnchor),
+            showUserLocationButton.widthAnchor.constraint(equalToConstant: 40),
+            showUserLocationButton.heightAnchor.constraint(equalToConstant: 40),
         ])
     }
     @objc
@@ -183,6 +203,13 @@ extension MapViewController{
         }
         navigationController?.present(nav, animated: true)
     }
+    @objc
+    func showAlarmLocation(){
+        let circle = mapView.overlays.map { $0 as! MKCircle}
+        guard let coordinate = circle.first?.coordinate else {return}
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
+        mapView.setRegion(region, animated: true)
+    }
 }
 
 extension MapViewController {
@@ -195,6 +222,7 @@ extension MapViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(removeLongPress), name: NSNotification.Name("removeLongPress"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(addLongPress), name: NSNotification.Name("addLongPress"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(saveOverlays), name: NSNotification.Name("saveOverlays") , object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(toggleIsHiddenButtons), name: NSNotification.Name("toggleIsHiddenButtons") , object: nil)
     }
 }
 
@@ -234,6 +262,18 @@ extension MapViewController {
     func saveOverlays(){
         let overlays = mapView.overlays.compactMap{ $0 as? MKCircle }
         presenter.saveOverlays(overlays: overlays)
+    }
+    @objc
+    func toggleIsHiddenButtons(){
+        searchButton.isHidden.toggle()
+        showAlarmLocationButton.isHidden.toggle()
+        let isSearchButtonHidden = searchButton.isHidden
+        UserDefaults.standard.set(isSearchButtonHidden, forKey: "isSearchButtonHidden")
+    }
+    func restoreButtonVisibilityState() {
+        let isSearchHidden = UserDefaults.standard.bool(forKey: "isSearchButtonHidden")
+        searchButton.isHidden = isSearchHidden
+        showAlarmLocationButton.isHidden = !isSearchHidden
     }
 }
 

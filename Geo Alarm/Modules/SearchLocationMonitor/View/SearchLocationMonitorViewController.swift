@@ -18,7 +18,7 @@ class SearchLocationMonitorViewController: UIViewController {
         return $0
     }(UIButton(type: .system))
     
-    lazy var addLocationButton:UIButton = {
+    lazy var addAlarmButton:UIButton = {
         $0.setTitle("Wake up here", for: .normal)
         $0.backgroundColor = #colorLiteral(red: 0.09206429869, green: 0.4222652912, blue: 0.9932720065, alpha: 1)
         $0.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
@@ -67,7 +67,7 @@ class SearchLocationMonitorViewController: UIViewController {
     }
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        let contentHeight = titleLabel.intrinsicContentSize.height + subtitleLabel.intrinsicContentSize.height + coordLabel.intrinsicContentSize.height + addLocationButton.intrinsicContentSize.height
+        let contentHeight = titleLabel.intrinsicContentSize.height + subtitleLabel.intrinsicContentSize.height + coordLabel.intrinsicContentSize.height + addAlarmButton.intrinsicContentSize.height
         preferredContentSize = CGSize(width: view.bounds.width, height: contentHeight + 70)
     }
 }
@@ -77,7 +77,6 @@ extension SearchLocationMonitorViewController:SearchLocationMonitorViewProtocol{
         titleLabel.text = title
         subtitleLabel.text = subtitle
         pointCoordinates.text = "\(lat),\(lon)"
-        print("\(title)")
     }
 }
 
@@ -91,7 +90,7 @@ private extension SearchLocationMonitorViewController{
         view.addSubview(titleLabel)
         view.addSubview(subtitleLabel)
         view.addSubview(coordLabel)
-        view.addSubview(addLocationButton)
+        view.addSubview(addAlarmButton)
         view.addSubview(pointCoordinates)
         
         NSLayoutConstraint.activate([
@@ -110,9 +109,9 @@ private extension SearchLocationMonitorViewController{
             pointCoordinates.bottomAnchor.constraint(equalTo: coordLabel.bottomAnchor),
             pointCoordinates.leadingAnchor.constraint(equalTo: coordLabel.trailingAnchor,constant: 5),
             
-            addLocationButton.topAnchor.constraint(equalTo: coordLabel.bottomAnchor,constant: 20),
-            addLocationButton.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 20),
-            addLocationButton.heightAnchor.constraint(equalToConstant: 50),
+            addAlarmButton.topAnchor.constraint(equalTo: coordLabel.bottomAnchor,constant: 20),
+            addAlarmButton.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 20),
+            addAlarmButton.heightAnchor.constraint(equalToConstant: 50),
             
         ])
     }
