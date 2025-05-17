@@ -16,13 +16,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
         
-        let mapVC = MapViewController()
-        
+        let view = MapViewController()
         let locationService = LocationService()
-        let presenter = MapPresenter(view: mapVC, locationService: locationService)
-        mapVC.presenter = presenter
+        let storageService = StorageService()
+        let presenter = MapPresenter(view: view, locationService: locationService, storageService: storageService)
+        view.presenter = presenter
     
-        let nav = UINavigationController(rootViewController: mapVC)
+        let nav = UINavigationController(rootViewController: view)
       
         window?.rootViewController = nav
         window?.makeKeyAndVisible()
@@ -56,6 +56,5 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
     }
-   
 }
 

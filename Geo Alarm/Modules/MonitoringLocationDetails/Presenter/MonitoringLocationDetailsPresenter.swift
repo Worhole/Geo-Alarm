@@ -13,25 +13,27 @@ protocol MonitoringLocationDetailsViewProtocol:AnyObject{
 }
 
 protocol MonitoringLocationDetailsPresenterProtocol:AnyObject {
-    init(view:MonitoringLocationDetailsViewProtocol,locationService:LocationServiceProtocol, coordinate:CLLocationCoordinate2D)
+    init(view:MonitoringLocationDetailsViewProtocol,locationService:LocationServiceProtocol, coordinate:CLLocationCoordinate2D,storageService:StorageServiceProtocol)
     func stopMonitoring()
 }
 
 class MonitoringLocationDetailsPresenter:MonitoringLocationDetailsPresenterProtocol {
-
+  
     weak var view:MonitoringLocationDetailsViewProtocol?
     let locationService:LocationServiceProtocol
+    let storageService:StorageServiceProtocol
     
-    required init(view: any MonitoringLocationDetailsViewProtocol, locationService: any LocationServiceProtocol, coordinate: CLLocationCoordinate2D) {
+    required init(view: any MonitoringLocationDetailsViewProtocol, locationService: any LocationServiceProtocol, coordinate: CLLocationCoordinate2D, storageService: any StorageServiceProtocol) {
         self.locationService = locationService
         self.view = view
+        self.storageService = storageService
         view.present(lat: String(format: "%6f", coordinate.latitude), lon:  String(format: "%6f", coordinate.longitude))
     }
     
     func stopMonitoring() {
         locationService.stopMonitoring()
         NotificationCenter.default.post(name: NSNotification.Name("removeOverlays"), object: nil)
-        NotificationCenter.default.post(name: NSNotification.Name("toggleIsHiddenButtons"), object: nil)
-        UserDefaults.standard.removeObject(forKey: "circleInfo")
+        NotificationCenter.default.post(name: NSNotification.Name("updateButtonVisibilityState"), object: nil)
+        storageService.removeCircle()
     }
 }

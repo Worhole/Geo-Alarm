@@ -52,9 +52,7 @@ class MapViewController: UIViewController {
         setupNotificationObserver()
         setupGestures()
         mapView.delegate = self
-        restoreCircleIfNeeded()
         mapView.userTrackingMode = .follow
-        restoreButtonVisibilityState()
     }
 
     override func viewDidLayoutSubviews() {
@@ -64,6 +62,17 @@ class MapViewController: UIViewController {
     
 }
 extension MapViewController:MapViewProtocol{
+    
+    func restoreButtonVisibilityState(isSearchButtonHidden: Bool?) {
+        guard let isSearchButtonHidden = isSearchButtonHidden else {return}
+        searchButton.isHidden = isSearchButtonHidden
+        showAlarmLocationButton.isHidden = !isSearchButtonHidden
+    }
+    
+    func restoreCircleIfNeeded(circle: MKCircle?) {
+        guard let circle = circle else {return}
+        mapView.addOverlay(circle)
+    }
     
     func dismissPermissionScreen() {
         locationPermissionVC.dismiss(animated: true)
@@ -113,7 +122,8 @@ extension MapViewController:MapViewProtocol{
         
         let view = MonitoringLocationDetailsViewController()
         let locationService = LocationService()
-        let presenter = MonitoringLocationDetailsPresenter(view: view, locationService: locationService, coordinate: coordinate)
+        let storageService = StorageService()
+        let presenter = MonitoringLocationDetailsPresenter(view: view, locationService: locationService, coordinate: coordinate,storageService: storageService)
         view.presenter = presenter
         
         let nav = UINavigationController(rootViewController: view)
@@ -131,6 +141,8 @@ extension MapViewController:MapViewProtocol{
         }
         navigationController?.present(nav, animated: true)
     }
+    
+    
 }
 
 extension MapViewController:SearchLocationDelegate {
@@ -221,8 +233,8 @@ extension MapViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(didTapedOnNotification), name: NSNotification.Name("clickedOnTheNotification"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(removeLongPress), name: NSNotification.Name("removeLongPress"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(addLongPress), name: NSNotification.Name("addLongPress"), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(saveOverlays), name: NSNotification.Name("saveOverlays") , object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(toggleIsHiddenButtons), name: NSNotification.Name("toggleIsHiddenButtons") , object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(saveCircle), name: NSNotification.Name("saveCircle") , object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateButtonVisibilityState), name: NSNotification.Name("updateButtonVisibilityState") , object: nil)
     }
 }
 
@@ -259,21 +271,17 @@ extension MapViewController {
         presenter.stopMonitoring()
     }
     @objc
-    func saveOverlays(){
-        let overlays = mapView.overlays.compactMap{ $0 as? MKCircle }
-        presenter.saveOverlays(overlays: overlays)
+    func saveCircle(){
+        if let circle = mapView.overlays.first(where: { $0 is MKCircle }) as? MKCircle {
+            presenter.saveCircle(circle: circle)
+        }
     }
     @objc
-    func toggleIsHiddenButtons(){
+    func updateButtonVisibilityState(){
         searchButton.isHidden.toggle()
         showAlarmLocationButton.isHidden.toggle()
         let isSearchButtonHidden = searchButton.isHidden
-        UserDefaults.standard.set(isSearchButtonHidden, forKey: "isSearchButtonHidden")
-    }
-    func restoreButtonVisibilityState() {
-        let isSearchHidden = UserDefaults.standard.bool(forKey: "isSearchButtonHidden")
-        searchButton.isHidden = isSearchHidden
-        showAlarmLocationButton.isHidden = !isSearchHidden
+        presenter.updateButtonVisibilityState(isSearchButtonHidden: isSearchButtonHidden)
     }
 }
 
@@ -343,15 +351,4 @@ extension MapViewController:MKMapViewDelegate {
     }
 }
 
-extension MapViewController{
-    func restoreCircleIfNeeded(){
-        if let circleInfo = UserDefaults.standard.object(forKey: "circleInfo") as? [[String : CLLocationDegrees]] {
-            for info in circleInfo {
-                let coordinate = CLLocationCoordinate2D(latitude: info["lat"] ?? 0, longitude: info["lon"] ?? 0)
-                let radius = info["radius"] ?? 0
-                let circle = MKCircle(center: coordinate, radius: radius)
-                mapView.addOverlay(circle)
-            }
-        }
-    }
-}
+

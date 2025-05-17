@@ -33,7 +33,7 @@ class MapSelectionMonitorPresenter:MapSelectionMonitorPresenterProtocol{
         locationService.startMonitoring(coordinate: coordinate)
         locationService.checkState(coordinate: coordinate)
         NotificationCenter.default.post(name: NSNotification.Name("removeAnnotation"), object: nil)
-        NotificationCenter.default.post(name: NSNotification.Name("saveOverlays"), object: nil)
-        NotificationCenter.default.post(name: NSNotification.Name("toggleIsHiddenButtons"), object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name("saveCircle"), object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name("updateButtonVisibilityState"), object: nil)
     }
 }

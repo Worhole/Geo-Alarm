@@ -21,6 +21,7 @@ class SearchViewController: UIViewController {
     lazy var searchLocationBar:UISearchBar = {
         $0.placeholder = "Search here"
         $0.delegate = self
+        $0.translatesAutoresizingMaskIntoConstraints = false
         return $0
     }(UISearchBar())
     

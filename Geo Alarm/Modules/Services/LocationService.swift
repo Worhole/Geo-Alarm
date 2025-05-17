@@ -44,7 +44,6 @@ class LocationService:NSObject, LocationServiceProtocol {
         locationManager.pausesLocationUpdatesAutomatically = false
         locationManager.activityType = .fitness
         locationManager.startMonitoring(for: region)
-
     }
     
     func checkState(coordinate:CLLocationCoordinate2D){

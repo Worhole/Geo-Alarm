@@ -15,27 +15,36 @@ protocol MapViewProtocol:AnyObject {
     func addAnnotation(at coordinate: CLLocationCoordinate2D)
     func showMapSelectionMonitor(coordinate: CLLocationCoordinate2D)
     func showStoptMonitoringSheet(coordinate:CLLocationCoordinate2D)
+    func restoreButtonVisibilityState(isSearchButtonHidden:Bool?)
+    func restoreCircleIfNeeded(circle:MKCircle?)
+    
 }
 
 protocol MapViewPresenterProtocol:AnyObject {
-    init(view: MapViewProtocol, locationService:LocationServiceProtocol)
+    init(view: MapViewProtocol, locationService:LocationServiceProtocol, storageService:StorageServiceProtocol)
     func didSelectLocation(at coordinate: CLLocationCoordinate2D)
     func displayMonitoringSheet(for coordinate:CLLocationCoordinate2D)
     func didPressOnZone(at coordinate:CLLocationCoordinate2D)
     func stopMonitoring()
     func checkAuthStatus()
-    func saveOverlays(overlays: [MKCircle])
+    func saveCircle(circle: MKCircle)
+    func updateButtonVisibilityState(isSearchButtonHidden:Bool)
 }
 
 class MapPresenter:MapViewPresenterProtocol {
     
+    
     weak var view:MapViewProtocol?
     let locationService:LocationServiceProtocol
+    let storageService:StorageServiceProtocol
     
-    required init(view: any MapViewProtocol, locationService: any LocationServiceProtocol) {
+    required init(view: any MapViewProtocol, locationService: any LocationServiceProtocol, storageService: any StorageServiceProtocol) {
         self.view = view
         self.locationService = locationService
+        self.storageService = storageService
         locationService.delegate = self
+        view.restoreButtonVisibilityState(isSearchButtonHidden: storageService.catchButtonVisibilityState())
+        view.restoreCircleIfNeeded(circle: storageService.catchCircle())
     }
     
     func didSelectLocation(at coordinate: CLLocationCoordinate2D) {
@@ -63,17 +72,13 @@ class MapPresenter:MapViewPresenterProtocol {
         }
     }
     
-    func saveOverlays(overlays: [MKCircle]) {
-        let circleInfo = overlays.map {
-            [
-                "lat":$0.coordinate.latitude,
-                "lon":$0.coordinate.longitude,
-                "radius":$0.radius
-            ]
-        }
-        UserDefaults.standard.set(circleInfo, forKey: "circleInfo")
+    func saveCircle(circle: MKCircle) {
+        storageService.saveCircle(circle: circle)
     }
     
+    func updateButtonVisibilityState(isSearchButtonHidden: Bool) {
+        storageService.saveButtonVisibilityState(visibilityState: isSearchButtonHidden)
+    }
 }
 
 extension MapPresenter:LocationServiceDelegate {
