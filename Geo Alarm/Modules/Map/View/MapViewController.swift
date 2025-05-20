@@ -196,8 +196,9 @@ extension MapViewController{
     @objc
     func goToSearch(){
         let view = SearchViewController()
-        let service = SearchLocationService()
-        let presenter = SearchLocationPresenter(view: view,service: service)
+        let searchLocationService = SearchLocationService()
+        let storageService = StorageService()
+        let presenter = SearchLocationPresenter(view: view, searchLocationService: searchLocationService , storageService: storageService)
         view.presenter = presenter
         view.delegate = self
 

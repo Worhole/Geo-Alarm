@@ -12,11 +12,16 @@ protocol SearchLocationDelegate:AnyObject{
     func selectLocation(at coordinate:CLLocationCoordinate2D)
 }
 
+enum SearchTableContentMode{
+    case history, results
+}
+
 class SearchViewController: UIViewController {
     
     var presenter:SearchLocationPresenter!
-    var items:[MKLocalSearchCompletion] = []
+    var items = [String]()
     weak var delegate:SearchLocationDelegate!
+    var contentMode:SearchTableContentMode = .results
     
     lazy var searchLocationBar:UISearchBar = {
         $0.placeholder = "Search here"
@@ -30,18 +35,25 @@ class SearchViewController: UIViewController {
         $0.delegate = self
         $0.translatesAutoresizingMaskIntoConstraints = false
         $0.register(SearchLocationRestultCell.self, forCellReuseIdentifier: SearchLocationRestultCell.reuseId)
+        $0.separatorStyle = .none
         return $0
     }(UITableView())
-    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupLayout()
+        setupRequestHistory()
     }
-    
 }
 
 extension SearchViewController:SearchLocationViewProtocol {
+    
+    func showSearchResults(_ searchTitles: [String]) {
+        items = searchTitles
+        contentMode = .results
+        searchLocationResultTableView.reloadData()
+    }
+    
     func presentSearchLocationMonitor(items: [MKMapItem]) {
         guard let presentingVC = self.presentingViewController else {return}
         self.dismiss(animated: true) {
@@ -73,14 +85,16 @@ extension SearchViewController:SearchLocationViewProtocol {
             presentingVC.present(nav, animated: true)
         }
     }
-    
-    func success(_ searchComletion: [MKLocalSearchCompletion]) {
-        items = searchComletion
-        searchLocationResultTableView.reloadData()
-    }
-    
     func failure(_ error: any Error) {
         print(error as Any)
+    }
+}
+
+extension SearchViewController{
+    func setupRequestHistory(){
+        items = presenter.loadSearchHistory()
+        contentMode = .history
+        searchLocationResultTableView.reloadData()
     }
 }
 
@@ -101,8 +115,8 @@ extension SearchViewController {
 
 extension SearchViewController:UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print("тыкнули на \(String(describing: tableView.cellForRow(at: indexPath)?.textLabel?.text))")
-        presenter.getMapItem(for: tableView.cellForRow(at: indexPath)?.textLabel?.text)
+        presenter.addSearchRequest(items[indexPath.row])
+        presenter.getMapItem(for: items[indexPath.row])
     }
 }
 
@@ -119,16 +133,35 @@ extension SearchViewController:UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: SearchLocationRestultCell.reuseId) as! SearchLocationRestultCell
-        let location = items[indexPath.row].title
-        cell.textLabel?.text = "\(location)"
-    
+        let title = items[indexPath.row]
+        cell.configue(title: title)
+        
+        if contentMode == .history {
+            cell.isXmarkButtonHidden(false)
+            cell.xmarkTapped = { [weak self, weak tableView] in
+                guard let self = self,
+                        let tableView = tableView,
+                        let currentIndexPath = tableView.indexPath(for: cell)
+                else {return}
+                self.items.remove(at: currentIndexPath.row)
+                self.presenter.removeSearchRequest(at: currentIndexPath.row)
+                self.searchLocationResultTableView.deleteRows(at: [currentIndexPath], with: .automatic)
+            }
+        }else{
+            cell.isXmarkButtonHidden(true)
+            cell.xmarkTapped = nil
+        }
         return cell
     }
 }
 
 extension SearchViewController:UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        presenter.searchLocation(for: searchText)
+        if searchBar.text?.isEmpty == true {
+            setupRequestHistory()
+        }else {
+            presenter.searchLocation(for: searchText)
+        }
     }
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         presenter.searchLocation(for: searchBar.text)
