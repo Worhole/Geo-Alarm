@@ -222,6 +222,7 @@ extension MapViewController{
         guard let coordinate = circle.first?.coordinate else {return}
         let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
         mapView.setRegion(region, animated: true)
+        presenter.didPressOnZone(at: coordinate)
     }
 }
 

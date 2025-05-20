@@ -7,17 +7,24 @@
 
 import UIKit
 
+class XmarkButton:UIButton {
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        let expandedBounds = bounds.insetBy(dx: -15, dy: -15)
+        return expandedBounds.contains(point)
+    }
+}
+
 class SearchLocationRestultCell: UITableViewCell {
     
     static let reuseId = "SideMenuCell"
     
-    lazy var xmarkButton:UIButton = {
+    lazy var xmarkButton:XmarkButton = {
         $0.translatesAutoresizingMaskIntoConstraints = false
         $0.setImage(UIImage(systemName: "xmark"), for: .normal)
         $0.tintColor = .gray
         $0.addTarget(self, action: #selector(xmarkAction), for: .touchUpInside)
         return $0
-    }(UIButton(type: .system))
+    }(XmarkButton(type: .system))
     
     lazy var searchImageView:UIImageView = {
         $0.translatesAutoresizingMaskIntoConstraints = false
